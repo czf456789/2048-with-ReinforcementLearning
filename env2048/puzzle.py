@@ -185,7 +185,7 @@ class GameGrid(Frame):
             index = (gen(), gen())
         self.matrix[index[0]][index[1]] = 2
 
-
+#运行
 if __name__ == '__main__':
     x = GameGrid()
     x.mainloop()
