@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, CENTER,Button
+from tkinter import Frame, Label, CENTER, Button
 import random
 import logic
 import constants as c
@@ -9,8 +9,10 @@ import threading
 import torch
 import numpy as np
 
+
 def gen():
     return random.randint(0, c.GRID_LEN - 1)
+
 
 def log2(matrix):
     m = np.array(0)
@@ -21,6 +23,7 @@ def log2(matrix):
                 m[i][j] = np.log2(matrix[i][j])
     return m
 
+
 class GameGrid(Frame):
     def __init__(self):
         Frame.__init__(self)
@@ -29,10 +32,10 @@ class GameGrid(Frame):
         self.agent.eval()
         self.grid()
         self.master.title('2048')
-        self.master.bind("<Key>", self.key_down)
-
-        self.TotalReward=0
-        self.InstantReward=0
+        # 若需使用搜索树 则将参数改为self.mcts_action
+        self.master.bind("<Key>", self.reinforce)
+        self.TotalReward = 0
+        self.InstantReward = 0
 
         self.commands = {
             c.KEY_UP: logic.up,
@@ -56,17 +59,16 @@ class GameGrid(Frame):
         self.history_matrixs = []
         self.update_grid_cells()
 
-
-
     def getstate(self):
         return self.matrix
+
     def init_grid(self):
-        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME,width=c.SIZE, height=c.SIZE)
-        #展示视图
+        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME, width=c.SIZE, height=c.SIZE)
+        # 展示视图
         background.grid()
 
         for i in range(c.GRID_LEN):
-            #一行一行渲染
+            # 一行一行渲染
             grid_row = []
             for j in range(c.GRID_LEN):
                 cell = Frame(
@@ -93,31 +95,33 @@ class GameGrid(Frame):
                 grid_row.append(t)
             self.grid_cells.append(grid_row)
 
-#这里是渲染工作
+    # 这里是渲染工作
     def update_grid_cells(self):
         for i in range(c.GRID_LEN):
             for j in range(c.GRID_LEN):
                 new_number = self.matrix[i][j]
                 if new_number == 0:
-                    self.grid_cells[i][j].configure(text="",bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                    self.grid_cells[i][j].configure(text="", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
                 else:
                     self.grid_cells[i][j].configure(
                         text=str(new_number),
                         bg=c.BACKGROUND_COLOR_DICT[new_number],
                         fg=c.CELL_COLOR_DICT[new_number]
                     )
-                    #更新窗口
+                    # 更新窗口
         self.update_idletasks()
+
     def get_valid_action(self):
         actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
-        valid_action=[0,0,0,0]
+        valid_action = [0, 0, 0, 0]
         if logic.game_state(self.matrix):
             for i in range(4):
                 _, done, _ = self.commands[actions[i]](self.matrix)
                 if not done:
-                    valid_action[i]+=1
+                    valid_action[i] += 1
         return valid_action
-    def get_valid_actions(self,state):
+
+    def get_valid_actions(self, state):
         actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
         valid_action = [0, 0, 0, 0]
         if logic.game_state(state):
@@ -126,58 +130,79 @@ class GameGrid(Frame):
                 if not done:
                     valid_action[i] += 1
         return valid_action
-    def key_down(self, event):
-        # 开始调用logic的命令
+
+    def reinforce(self, event):
         self.InstantReward = 0
         key = event.keysym
         actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
-        #这个是强化学习的动作选取
-        valid_action=self.get_valid_action()
-        action=self.agent.step_predict(log2(self.matrix),valid_action)
-        #以下是使用搜索树的方法
-        # value = [0, 0, 0, 0]
-        # self.mcts(self.matrix, value, 0,-1)
-        #如果搜索失败就采取随即动作
-        # if np.sum(value)==0:
-        #     valid_action = self.get_valid_action()
-        #     action=random.randint(0,3)
-        #     while valid_action[action]!=0:
-        #         action = random.randint(0, 3)
-        # else:
-        #     action = np.argmax(value)
+
+        valid_action = self.get_valid_action()
+        action = self.agent.step_predict(log2(self.matrix), valid_action)
+
         self.matrix, done, self.InstantReward = self.commands[actions[action]](self.matrix)
         self.TotalReward += self.InstantReward
         if done:
-                self.matrix = logic.add_two(self.matrix)
-                self.update_grid_cells()
-                # 开始检查状态
-                if logic.game_state(self.matrix) == 'win':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                if logic.game_state(self.matrix) == 'lose':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.InstantReward = -sys.maxint - 1
-                    self.TotalReward += self.InstantReward
-    def mcts(self,state,value,deep,father):
+            self.matrix = logic.add_two(self.matrix)
+            self.update_grid_cells()
+            # 开始检查状态
+            if logic.game_state(self.matrix) == 'win':
+                self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+            if logic.game_state(self.matrix) == 'lose':
+                self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.InstantReward = -sys.maxint - 1
+                self.TotalReward += self.InstantReward
+
+    def mcts_action(self, event):
+        self.InstantReward = 0
+        key = event.keysym
         actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
-        valid_action=self.get_valid_actions(state)
-        if deep<5:
+        # 以下是使用搜索树的方法
+        value = [0, 0, 0, 0]
+        self.mcts(self.matrix, value, 0, -1)
+        # 如果搜索失败就采取随即动作
+        if np.sum(value) == 0:
+            valid_action = self.get_valid_action()
+            action = random.randint(0, 3)
+            while valid_action[action] != 0:
+                action = random.randint(0, 3)
+        else:
+            action = np.argmax(value)
+
+        self.matrix, done, self.InstantReward = self.commands[actions[action]](self.matrix)
+        self.TotalReward += self.InstantReward
+        if done:
+            self.matrix = logic.add_two(self.matrix)
+            self.update_grid_cells()
+            # 开始检查状态
+            if logic.game_state(self.matrix) == 'win':
+                self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+            if logic.game_state(self.matrix) == 'lose':
+                self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                self.InstantReward = -sys.maxint - 1
+                self.TotalReward += self.InstantReward
+
+    def mcts(self, state, value, deep, father):
+        actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
+        valid_action = self.get_valid_actions(state)
+        if deep < 5:
             for i in range(4):
-                if valid_action[i]==0:
+                if valid_action[i] == 0:
                     next_state, done, reward = self.commands[actions[i]](state)
                     if done:
                         next_state = logic.add_two(next_state)
                         # 开始检查状态
                         if logic.game_state(next_state) == 'lose':
-                          return
-                    current_value=reward
-                    if deep==0:
-                        father=i
-                        #threading.Thread(target=self.mcts(next_state, value, deep + 1, father)).start()
-                    value[father]+=current_value
-                    self.mcts(next_state, value, deep + 1, father)
+                            return
+                    current_value = reward
+                    if deep == 0:
+                        father = i
 
+                    value[father] += current_value
+                    self.mcts(next_state, value, deep + 1, father)
 
     def generate_next(self):
         index = (gen(), gen())
@@ -186,6 +211,7 @@ class GameGrid(Frame):
         self.matrix[index[0]][index[1]] = 2
 
 
+# 运行
 if __name__ == '__main__':
     x = GameGrid()
     x.mainloop()
