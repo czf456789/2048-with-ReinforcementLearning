@@ -74,10 +74,6 @@ class PPO:
         self.actor.load_state_dict(torch.load('./save_weight/actor_net{}.pth'.format(epoch)))
         self.critic.load_state_dict(torch.load('./save_weight/critic_net{}.pth'.format(epoch)))
 
-    def load_weight_from_puzzle(self, epoch):
-        print('开始训练{}'.format(epoch))
-        self.actor.load_state_dict(torch.load('../save_weight/actor_net{}.pth'.format(epoch)))
-        self.critic.load_state_dict(torch.load('../save_weight/critic_net{}.pth'.format(epoch)))
 
     def test2(self):
         return self.actor.state_dict(), self.critic.state_dict()

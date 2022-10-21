@@ -1,11 +1,10 @@
 from tkinter import Frame, Label, CENTER, Button
 import random
-import logic
-import constants as c
+from env2048 import logic
+from env2048 import constants as c
 import sys
 from ppo import PPO
 import time
-import threading
 import torch
 import numpy as np
 
@@ -28,7 +27,7 @@ class GameGrid(Frame):
     def __init__(self):
         Frame.__init__(self)
         self.agent = PPO(0, 0, 0, 0, 0, 0)
-        self.agent.load_weight_from_puzzle(327600)
+        self.agent.load_weight(327600)
         self.agent.eval()
         self.grid()
         self.master.title('2048')
