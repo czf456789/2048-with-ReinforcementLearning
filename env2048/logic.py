@@ -60,7 +60,7 @@ def add_two(mat):
     while mat[a][b] != 0:
         a = random.randint(0, len(mat) - 1)
         b = random.randint(0, len(mat) - 1)
-    p = np.array([0.9, 0.1 , 0])
+    p = np.array([1.0, 0 , 0])
     k = np.random.choice([2, 4, 8], p=p.ravel())
     mat[a][b] = k
     return mat

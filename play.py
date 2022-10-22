@@ -34,7 +34,10 @@ class GameGrid(Frame):
         self.agent.eval()
         self.grid()
         self.master.title('2048')
-        # 若需使用搜索树 则将参数改为self.mcts_action
+
+        # 若需使用搜索树 则将参数改为self.mcts_action  较慢
+        #若需使用强化学习 将参数改为self.reinforce  有显卡强化学习更快
+        #不要带括号
         self.master.bind("<Key>", self.mcts_action)
         self.TotalReward = 0
         self.InstantReward = 0
@@ -52,7 +55,6 @@ class GameGrid(Frame):
             c.KEY_LEFT_ALT2: logic.left,
             c.KEY_RIGHT_ALT2: logic.right,
         }
-
         self.grid_cells = []
         self.matrix = logic.new_game(c.GRID_LEN)
         self.init_grid()
