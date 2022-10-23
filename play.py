@@ -200,18 +200,21 @@ class GameGrid(Frame):
                     next_state, done, reward = self.commands[actions[i]](state)
                     father = i
                     self.mcts(next_state, value, deep + 1, father)
-        if deep < 6 and deep != 0:
+                else:
+                    value[i]=-999
+        if deep < 4 and deep != 0:
             for i in range(4):
                 if valid_action[i] == 0:
                     next_state, done, reward = self.commands[actions[i]](state)
-                    _, empty_cells = logic.check_Is_full(next_state)
-                    empty_cells = empty_cells / 16
                     if done:
                         next_state = logic.add_two(next_state)
                         # 开始检查状态
                         if logic.game_state(next_state) == 'lose':
+                            #value[father]+=-5*pow(0.9, deep)
                             return
-                    value[father] += (empty_cells + reward) * pow(0.95, deep)
+                    _, empty_cells = logic.check_Is_full(next_state)
+                    empty_cells_reward=empty_cells/2
+                    value[father] += (empty_cells_reward + reward) *pow(0.9, deep)
                     self.mcts(next_state, value, deep + 1, father)
 
 
