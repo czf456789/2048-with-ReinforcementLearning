@@ -60,7 +60,7 @@ def add_two(mat):
     while mat[a][b] != 0:
         a = random.randint(0, len(mat) - 1)
         b = random.randint(0, len(mat) - 1)
-    p = np.array([1.0, 0 , 0])
+    p = np.array([0.9, 0.1, 0])
     k = np.random.choice([2, 4, 8], p=p.ravel())
     mat[a][b] = k
     return mat
@@ -185,11 +185,12 @@ def merge(mat, done):
                 # 奖励
                 mat[i][j] *= 2
                 mat[i][j + 1] = 0
+
                 rewards += mat[i][j]
                 done = True
-    _,empty_grid_count=check_Is_full(mat)
+    _, empty_grid_count = check_Is_full(mat)
 
-    reward = rewards/100
+    reward =  rewards / 100
     return mat, done, reward
 
 

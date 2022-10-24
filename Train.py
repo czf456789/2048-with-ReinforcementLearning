@@ -1,12 +1,11 @@
 import rl_utils
-from CDQ import A2C
 from tqdm import *
 import os
 import torch
 import time
 import matplotlib.pyplot as plt
 from env2048.env import envs
-from Train_off_policy import train_off_policy
+
 from Train_on_policy import train_on_policy
 
 if __name__ == '__main__':
@@ -23,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--entropy_discount_factor', default=1, type=int,
                         help='resume from checkpoint')
     #一开始可以将折算因子降低到0.95 后续再慢慢升高到0.995
-    parser.add_argument('--gama', default=0.99, type=float, help='折算因子 discount_factor')
+    parser.add_argument('--gama', default=0.96, type=float, help='折算因子 discount_factor')
     # 训练的总轮次
     parser.add_argument('--epochs', default=650000, type=int, metavar='N',
                         help='number of total epochs to run')

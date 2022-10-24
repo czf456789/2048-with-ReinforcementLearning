@@ -89,8 +89,8 @@ class GameGrid():
             #     # print("移动了最大值")
             #     InstantReward -= (np.array(self.matrix).max()*4-self.matrix[0][0]-self.matrix[0][3]-self.matrix[3][0]-self.matrix[3][3])/ 100
             if logic.game_state(self.matrix) == 'lose':
-                factor = 11 - np.log2(np.array(self.matrix).max())
-                InstantReward = -50 * factor
+                factor = 10 - np.log2(np.array(self.matrix).max())
+                InstantReward = -20 * factor
                 # print("游戏失败")
                 return log2(self.matrix), InstantReward, False, done
             self.matrix = logic.add_two(self.matrix)

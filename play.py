@@ -34,10 +34,9 @@ class GameGrid(Frame):
         self.agent.eval()
         self.grid()
         self.master.title('2048')
-
         # 若需使用搜索树 则将参数改为self.mcts_action  较慢
-        #若需使用强化学习 将参数改为self.reinforce  有显卡强化学习更快
-        #不要带括号
+        # 若需使用强化学习 将参数改为self.reinforce  有显卡强化学习更快
+        # 不要带括号
         self.master.bind("<Key>", self.mcts_action)
         self.TotalReward = 0
         self.InstantReward = 0
@@ -170,13 +169,8 @@ class GameGrid(Frame):
             value = [0, 0, 0, 0]
             self.mcts(self.matrix, value, 0, -1)
             # 如果搜索失败就采取随即动作
-            if np.sum(value) == 0:
-                valid_action = self.get_valid_action()
-                action = random.randint(0, 3)
-                while valid_action[action] != 0:
-                    action = random.randint(0, 3)
-            else:
-                action = np.argmax(value)
+            print(value)
+            action = np.argmax(value)
             self.matrix, done, self.InstantReward = self.commands[actions[action]](self.matrix)
             if done:
                 self.matrix = logic.add_two(self.matrix)
@@ -186,23 +180,34 @@ class GameGrid(Frame):
                     self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
                     self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
                 if logic.game_state(self.matrix) == 'lose':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
                     self.InstantReward = -sys.maxint - 1
                     self.TotalReward += self.InstantReward
+
+    def is_move_max(self, state, next_state):
+        if np.max(state) >= 256:
+            if np.argmax(state) == 0 or np.argmax(state) == 3 or np.argmax(state) == 12 or np.argmax(state) == 15:
+                return np.max(state) / 100
+        return 0;
 
     def mcts(self, state, value, deep, father):
         actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
         valid_action = self.get_valid_actions(state)
+        count = 4 - np.sum(valid_action)
         if deep == 0:
             for i in range(4):
                 if valid_action[i] == 0:
                     next_state, done, reward = self.commands[actions[i]](state)
                     father = i
+                    if reward < 0.32:
+                        reward = 0
+                    value[i] = reward
+                    if done:
+                        next_state = logic.add_two(next_state)
                     self.mcts(next_state, value, deep + 1, father)
                 else:
-                    value[i]=-999
-        if deep < 4 and deep != 0:
+                    value[i] = -999
+
+        if deep <5 and deep != 0:
             for i in range(4):
                 if valid_action[i] == 0:
                     next_state, done, reward = self.commands[actions[i]](state)
@@ -210,11 +215,17 @@ class GameGrid(Frame):
                         next_state = logic.add_two(next_state)
                         # 开始检查状态
                         if logic.game_state(next_state) == 'lose':
-                            #value[father]+=-5*pow(0.9, deep)
+                            value[father] += -10*pow(0.8,deep)
                             return
                     _, empty_cells = logic.check_Is_full(next_state)
-                    empty_cells_reward=empty_cells/2
-                    value[father] += (empty_cells_reward + reward) *pow(0.9, deep)
+                    empty_cells_reward = empty_cells/2
+                    if reward < 0.64:
+                        if empty_cells<5 or np.max(state)>=1024:
+                            reward = reward*(16-empty_cells)/3
+                        else:
+                            reward=0
+
+                    value[father] += (reward + empty_cells_reward )
                     self.mcts(next_state, value, deep + 1, father)
 
 

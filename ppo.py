@@ -45,7 +45,6 @@ class PPO:
         for i in range(4):
             if valid_action[i] != 0:
                 probs[0][i] = 0
-
         action_dist = torch.distributions.Categorical(probs)
         action = action_dist.sample()
         return action.item()
@@ -55,7 +54,6 @@ class PPO:
         state = torch.unsqueeze(state, dim=1)
         probs = self.actor(state)
         print(state)
-        # print(valid_action)
         for i in range(4):
             if valid_action[i] != 0:
                 probs[0][i] = 0
