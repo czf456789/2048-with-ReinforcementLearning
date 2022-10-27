@@ -7,22 +7,6 @@ from env2048 import logic
 import numpy as np
 
 
-def gen():
-    return random.randint(0, c.GRID_LEN - 1)
-
-
-def create_random_matrix():
-    p = np.array([0, 0, 0.15, 0.15, 0.15, 0.2, 0.15, 0.1, 0.1, 0, 0])
-    k = np.random.choice([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], p=p.ravel())
-    mat = np.array(0)
-    mat = np.resize(mat, (4, 4))
-    for i in range(4):
-        for j in range(4):
-            if random.random() < 0.7:
-                mat[i][j] = np.random.choice([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], p=p.ravel())
-    return mat
-
-
 def log2(matrix):
     m = np.array(0)
     m = np.resize(m, (len(matrix[0]), len(matrix[0])))
@@ -34,72 +18,51 @@ def log2(matrix):
 
 
 class GameGrid():
-    def __init__(self):
+    def __init__(self,difficulty_factor):
+        #四种动作
         self.commands = {
-            c.KEY_UP: logic.up,
-            c.KEY_DOWN: logic.down,
-            c.KEY_LEFT: logic.left,
-            c.KEY_RIGHT: logic.right,
-            c.KEY_UP_ALT1: logic.up,
-            c.KEY_DOWN_ALT1: logic.down,
-            c.KEY_LEFT_ALT1: logic.left,
-            c.KEY_RIGHT_ALT1: logic.right,
-            c.KEY_UP_ALT2: logic.up,
-            c.KEY_DOWN_ALT2: logic.down,
-            c.KEY_LEFT_ALT2: logic.left,
-            c.KEY_RIGHT_ALT2: logic.right,
+            logic.up,
+            logic.down,
+            logic.left,
+            logic.right,
         }
-        self.matrix = logic.new_game(c.GRID_LEN)
+        self.difficulty=difficulty_factor
+
 
     def reset(self):
-        self.__init__()
+        state = logic.new_game(c.GRID_LEN,self.difficulty)
+        return state
 
-    def get_max_point(self):
-        return np.array(self.matrix).max()
-
-    def get_total_point(self):
-        return np.array(self.matrix).sum()
-
-    def getstate(self):
-        return log2(self.matrix)
-
-    def check_state(self):
-        if logic.game_state(self.matrix) == 'lose':
+    def check_state(self, state):
+        if logic.game_state(state) == 'lose':
             return False
         return True
 
     # 测试这个动作是否合法
-    def step_test(self, action):
+    def step_test(self, action, state):
         if action in self.commands:
-            _, done, _ = self.commands[action](self.matrix)
+            _, done, _ = self.commands[action](state)
         return done
 
-    def step_action(self, action):
+    def get_valid_action(self, matrix):
+        actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
+        valid_action = [0, 0, 0, 0]
+        if self.check_state(matrix):
+            for i in range(4):
+                if not self.step_test(actions[i], matrix):
+                    valid_action[i] += 1
+        #返回值若 valid_action[i]=1 说明动作i是无效动作
+        return valid_action
+
+    def step_action(self, action, state):
         InstantReward = 0
-        key = action
-        if key in self.commands:
             # done为False意思为做出的动作是无效动作
-            self.matrix, done, InstantReward = self.commands[key](self.matrix)
-            # 如果移动了最大数
-            # print(1231)
-            max_value = np.array(self.matrix).max()
-            #这里尝试了惩罚移动最大数字加入到训练中 但效果不好
-            # if (self.matrix[0][0] != max_value or self.matrix[0][3] != max_value or self.matrix[3][0] != max_value or
-            #         self.matrix[3][3] != max_value):
-            #     # print("移动了最大值")
-            #     InstantReward -= (np.array(self.matrix).max()*4-self.matrix[0][0]-self.matrix[0][3]-self.matrix[3][0]-self.matrix[3][3])/ 100
-            if logic.game_state(self.matrix) == 'lose':
-                factor = 10 - np.log2(np.array(self.matrix).max())
+        next_state, done, InstantReward = self.commands[action](state)
+        if logic.game_state(next_state) == 'lose':
+                factor = 10 - np.log2(np.array(next_state).max())
                 InstantReward = -20 * factor
                 # print("游戏失败")
-                return log2(self.matrix), InstantReward, False, done
-            self.matrix = logic.add_two(self.matrix)
-        return log2(self.matrix), float(InstantReward), True, done
-
-
-if __name__ == '__main__':
-    x = [[0, 3, 21, 34], [0, 3, 21, 38], [0, 3, 21, 38], [0, 3, 21, 38]]
-    c = 34
-    print(x[3][3])
-    print(c in x[0])
-    print(np.array(x).argmax())
+                return log2(next_state), InstantReward, False, done
+        #在随机位置添加一个数字
+        next_state = logic.add_two(next_state,self.difficulty)
+        return log2(next_state), InstantReward, True, done

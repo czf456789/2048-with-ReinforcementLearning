@@ -1,10 +1,9 @@
 import random
-
 from ppo import PPO
 from env2048.env import envs
 import torch
 import numpy as np
-
+import time
 #测试一百轮的所有得分
 
 def predict():
@@ -24,6 +23,7 @@ def predict():
     total_count=0
     punish_count=0
     counts=0
+    t=time.time()
     for i in range(100):
         e_return = 0
         state = env.reset()
@@ -42,9 +42,10 @@ def predict():
         count[int(np.log2(max_point))] += 1
         max_p.append(max_point)
         max_t_p.append(max_total_point)
-    print(show)
-    print(count)
-    print(punish_count/total_count)
+    print(time.time() - t)
+    # print(show)
+    # print(count)
+
     return total_reward, max_p, max_t_p
 
 

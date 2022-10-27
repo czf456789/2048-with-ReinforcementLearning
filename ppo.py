@@ -1,5 +1,4 @@
 import random
-
 import torch
 from Main_Net import Actor_Net as PolicyNet, Critic_Net as ValueNet
 import rl_utils
@@ -53,11 +52,11 @@ class PPO:
         state = torch.tensor(np.array([state]), dtype=torch.float).to(self.device)
         state = torch.unsqueeze(state, dim=1)
         probs = self.actor(state)
-        print(state)
+        #print(state)
         for i in range(4):
             if valid_action[i] != 0:
                 probs[0][i] = 0
-        print(probs)
+        #print(probs)
         action=probs.argmax()
         # action_dist = torch.distributions.Categorical(probs)
         # action = action_dist.sample()

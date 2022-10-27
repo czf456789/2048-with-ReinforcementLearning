@@ -23,12 +23,12 @@ from env2048 import constants as c
 # Matrix elements must be equal but not identical
 # 1 mark for creating the correct matrix
 
-def new_game(n):
+def new_game(n,difficulty):
     matrix = []
     for i in range(n):
         matrix.append([0] * n)
-    matrix = add_two(matrix)
-    matrix = add_two(matrix)
+    matrix = add_two(matrix,difficulty)
+    matrix = add_two(matrix,difficulty)
     return matrix
 
 
@@ -51,7 +51,8 @@ def check_Is_full(mat):
     return True, 0
 
 
-def add_two(mat):
+def add_two(mat,difficulty):
+    difficulty_distribution = np.array([[1, 0, 0], [0.9, 0.1, 0], [0.8, 0.1, 0.1]])
     is_full, _ = check_Is_full(mat)
     if is_full:
         return mat
@@ -60,7 +61,7 @@ def add_two(mat):
     while mat[a][b] != 0:
         a = random.randint(0, len(mat) - 1)
         b = random.randint(0, len(mat) - 1)
-    p = np.array([0.9, 0.1, 0])
+    p = difficulty_distribution[difficulty]
     k = np.random.choice([2, 4, 8], p=p.ravel())
     mat[a][b] = k
     return mat
