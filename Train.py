@@ -34,7 +34,8 @@ if __name__ == '__main__':
     parser.add_argument('--v_lr', default=0.002, type=float,
                         help='initial learning rate, 0.02 is the default value for training '
                              'on 8 gpus and 2 images_per_gpu')
-
+    parser.add_argument('--difficulty_factor', default=1, type=int,
+                        help='2048环境难度系数')
 
     # 目标网络更新频率
     parser.add_argument('--target_update', default=5, type=int, help='目标网络的频率更新')

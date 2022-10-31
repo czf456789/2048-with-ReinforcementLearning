@@ -141,30 +141,43 @@ class GameGrid(Frame):
         self.destroy_window()
 
     def mcts(self, state, value, deep, father):
+        if logic.game_state(state) == 'lose':
+            return
         valid_action = self.get_valid_action(state)
         if deep == 0:
             for action in range(4):
                 if valid_action[action] == 0:
                     next_state, done, reward = self.commands[action](state)
                     father = action
-                    value[action] = reward
                     if done:
                         next_state = logic.add_two(next_state, self.difficulty)
-                    self.mcts(next_state, value, deep + 1, father)
+                        empty_cells= logic.check_info(next_state)
+                        if logic.game_state(next_state) == 'lose':
+                            pass
+                        else:
+                            if reward < 0.64:
+                                if empty_cells < 5:
+                                    reward = reward * (16 - empty_cells) / 3
+                                else:
+                                    reward = 0
+                            value[action] = reward+empty_cells/2
+                            self.mcts(next_state, value, deep + 1, father)
                 else:
-                    value[action] = -999
-        if deep < 4 and deep != 0:
+                    value[action]=-999
+        if deep <4 and deep != 0:
             for action in range(4):
                 if valid_action[action] == 0:
                     next_state, done, reward = self.commands[action](state)
+                    next_state = logic.add_two(next_state, self.difficulty)
+                    # 开始检查状态
                     if done:
                         next_state = logic.add_two(next_state, self.difficulty)
                         # 开始检查状态
                         if logic.game_state(next_state) == 'lose':
                             return
-                    _, empty_cells = logic.check_Is_full(next_state)
+                    empty_cells = logic.check_info(next_state)
                     empty_cells_reward = empty_cells / 2
-                    if reward < 0.48:
+                    if reward < 0.64:
                         if empty_cells < 5:
                             reward = reward * (16 - empty_cells) / 3
                         else:
@@ -182,7 +195,7 @@ class GameGrid(Frame):
         self.enable_graph()
         self.master.bind("<Key>", self.mcts_action)
 
-    def test_reinforce(self, use_graph):
+    def test_reinforce(self):
         self.agent = PPO(0, 0, 0, 0, 0, 0)
         self.agent.load_weight(327600)
         self.agent.eval()
@@ -193,13 +206,16 @@ class GameGrid(Frame):
         self.test_epoch = test_epoch
         if test_case == "mcts":
             self.test_search_tree()
+        else:
+            self.test_reinforce()
 
 
 # 运行
 if __name__ == '__main__':
-    #0,1,2 难度系数
-    difficult_factor=1
+    # 0,1,2 难度系数
+    difficult_factor = 1
     x = GameGrid(difficult_factor)
-    # reinforce
+    # test_case = "reinforce"
     test_case = "mcts"
-    x.predict(test_case,5)
+    train_epoch = 20
+    x.predict(test_case, train_epoch)

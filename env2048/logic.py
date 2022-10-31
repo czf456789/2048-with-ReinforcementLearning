@@ -23,12 +23,12 @@ from env2048 import constants as c
 # Matrix elements must be equal but not identical
 # 1 mark for creating the correct matrix
 
-def new_game(n,difficulty):
+def new_game(n, difficulty):
     matrix = []
     for i in range(n):
         matrix.append([0] * n)
-    matrix = add_two(matrix,difficulty)
-    matrix = add_two(matrix,difficulty)
+    matrix = add_two(matrix, difficulty)
+    matrix = add_two(matrix, difficulty)
     return matrix
 
 
@@ -40,20 +40,38 @@ def new_game(n,difficulty):
 # Points to note:
 # Must ensure that it is created on a zero entry
 # 1 mark for creating the correct loop
-def check_Is_full(mat):
+
+def fabs(k):
+    if k > 0:
+        return k
+    return -k
+
+
+def empty_count(mat):
     count = 0
+    nearby_value = 0
     for i in range(len(mat)):
         for j in range(len(mat)):
             if (mat[i][j] == 0):
                 count += 1
-    if count != 0:
-        return False, count
-    return True, 0
+
+    return count
 
 
-def add_two(mat,difficulty):
+def check_info(mat):
+    count = 0
+    variance=0
+    for i in range(len(mat)):
+        for j in range(len(mat)):
+            if (mat[i][j] == 0):
+                count += 1
+
+
+    return count
+
+def add_two(mat, difficulty):
     difficulty_distribution = np.array([[1, 0, 0], [0.9, 0.1, 0], [0.8, 0.1, 0.1]])
-    is_full, _ = check_Is_full(mat)
+    is_full = empty_count(mat) == 0
     if is_full:
         return mat
     a = random.randint(0, len(mat) - 1)
@@ -189,9 +207,9 @@ def merge(mat, done):
 
                 rewards += mat[i][j]
                 done = True
-    _, empty_grid_count = check_Is_full(mat)
+    empty_grid_count = empty_count(mat)
 
-    reward =  rewards / 100
+    reward = rewards / 100
     return mat, done, reward
 
 

@@ -21,7 +21,7 @@ def train_on_policy(args):
     gamma = args.gama
     eps = 0.2
     agent = PPO(actor_lr, critic_lr, lmbda, epochs, eps, gamma)
-    env2048 = envs()
+    env2048 = envs(args.diffcluty_factor)
     return_list = []
     critic_loss_list = []
     agent.train()
@@ -33,14 +33,12 @@ def train_on_policy(args):
     mean_reward = 0
     max_100_point = 0
     transition = {'state': [], 'action': [], 'next_state': [], 'reward': [], 'done': []}
-    punish = {'state': [], 'action': [], 'next_state': [], 'reward': [], 'done': []}
     for i in range(int(start_epoch / 300), int(num_episodes / 300)):
         max_100_point = 0
         max_total_point = 0
         with tqdm(total=300, desc='episode %d' % i) as pbar:
             for i_episode in range(300):
                 state = env2048.reset()
-                action = -2
                 done = True
                 while done:
                     # 无效动作在step之前以及提前过滤掉了
@@ -54,9 +52,7 @@ def train_on_policy(args):
                     transition['reward'].append(reward)
                     transition['done'].append(int(done))
                     state = next_state
-
                 max_point, total_point = env2048.get_game_point()
-
                 if max_point > max_100_point:
                     max_100_point = max_point
                 if total_point > max_total_point:

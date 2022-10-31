@@ -18,8 +18,6 @@ class PPO:
                                                 lr=actor_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(),
                                                  lr=critic_lr)
-        self.actor_optimizer1 = torch.optim.SGD(self.actor.parameters(),
-                                                 lr=0.001)
         self.gamma = gamma
         self.lmbda = lmbda
         self.epochs = epochs  # 一条序列的数据用来训练轮数
@@ -38,9 +36,6 @@ class PPO:
         state = torch.tensor(np.array([state]), dtype=torch.float).to(self.device)
         state = torch.unsqueeze(state, dim=1)
         probs = self.actor(state)
-        m = False
-        #print(probs)
-        #valid_action记录这本状态下的合法操作
         for i in range(4):
             if valid_action[i] != 0:
                 probs[0][i] = 0
@@ -52,14 +47,10 @@ class PPO:
         state = torch.tensor(np.array([state]), dtype=torch.float).to(self.device)
         state = torch.unsqueeze(state, dim=1)
         probs = self.actor(state)
-        #print(state)
         for i in range(4):
             if valid_action[i] != 0:
                 probs[0][i] = 0
-        #print(probs)
         action=probs.argmax()
-        # action_dist = torch.distributions.Categorical(probs)
-        # action = action_dist.sample()
         return action.item()
 
     def save_weight(self, epoch):
@@ -71,11 +62,6 @@ class PPO:
         self.actor.load_state_dict(torch.load('./save_weight/actor_net{}.pth'.format(epoch)))
         self.critic.load_state_dict(torch.load('./save_weight/critic_net{}.pth'.format(epoch)))
 
-
-    def test2(self):
-        return self.actor.state_dict(), self.critic.state_dict()
-
-
     def update(self, transition):
         # self.update_once(punish)
         states = torch.tensor(np.array(transition['state']), dtype=torch.float).to(self.device)
@@ -86,19 +72,10 @@ class PPO:
         actions = torch.tensor(transition['action']).view(-1, 1).to(
             self.device)
         dones = torch.tensor(transition['done']).view(-1, 1).to(self.device)
-
         td_target = rewards + self.gamma * self.critic(next_states) * dones
         td_delta = td_target - self.critic(states)
         advantage = rl_utils.compute_advantage(self.gamma, self.lmbda,
                                                td_delta.cpu()).to(self.device)
-
-        # t1=self.actor(states)
-        # # 熵正则
-        # entropy_loss = torch.mean(torch.sum(self.actor(states) * torch.log(self.actor(states))))
-        # self.actor_optimizer1.zero_grad()
-        # entropy_loss.backward()
-        # self.actor_optimizer1.step()
-        # m=torch.mean(torch.sum(self.actor(states) * torch.log(self.actor(states))))
         old_log_probs = torch.log(self.actor(states).gather(1,
                                                             actions)).detach()
 
@@ -127,9 +104,3 @@ class PPO:
         return c_loss / self.epochs, a_loss / self.epochs
 
 
-if __name__ == '__main__':
-    probs = torch.tensor(np.array([[0, 0, 0, 0.001]]))
-    action_dist = torch.distributions.Categorical(probs)
-    for i in range(1000):
-        action = action_dist.sample()
-        print(action.item())
