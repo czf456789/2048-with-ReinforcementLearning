@@ -65,8 +65,6 @@ def check_info(mat):
         for j in range(len(mat)):
             if (mat[i][j] == 0):
                 count += 1
-
-
     return count
 
 def add_two(mat, difficulty):

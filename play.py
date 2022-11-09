@@ -151,38 +151,36 @@ class GameGrid(Frame):
                     father = action
                     if done:
                         next_state = logic.add_two(next_state, self.difficulty)
-                        empty_cells= logic.check_info(next_state)
+                        empty_cells = logic.check_info(next_state)
+                        if empty_cells >= 4:
+                            empty_cells_reward = empty_cells / 2
+                        else:
+                            empty_cells_reward = empty_cells / 4
                         if logic.game_state(next_state) == 'lose':
                             pass
                         else:
-                            if reward < 0.64:
-                                if empty_cells < 5:
-                                    reward = reward * (16 - empty_cells) / 3
-                                else:
-                                    reward = 0
-                            value[action] = reward+empty_cells/2
+                            if reward < 1.28:
+                                reward = reward * pow(1.15, (8 - empty_cells))
+                            value[action] = (reward + empty_cells_reward)
                             self.mcts(next_state, value, deep + 1, father)
-                else:
-                    value[action]=-999
-        if deep <4 and deep != 0:
+        if deep < 4 and deep != 0:
             for action in range(4):
                 if valid_action[action] == 0:
                     next_state, done, reward = self.commands[action](state)
-                    next_state = logic.add_two(next_state, self.difficulty)
-                    # 开始检查状态
                     if done:
                         next_state = logic.add_two(next_state, self.difficulty)
                         # 开始检查状态
                         if logic.game_state(next_state) == 'lose':
-                            return
+
+                            pass
                     empty_cells = logic.check_info(next_state)
-                    empty_cells_reward = empty_cells / 2
-                    if reward < 0.64:
-                        if empty_cells < 5:
-                            reward = reward * (16 - empty_cells) / 3
-                        else:
-                            reward = 0
-                    value[father] += (reward + empty_cells_reward) / (4 - np.sum(valid_action))
+                    if empty_cells >= 4:
+                        empty_cells_reward = empty_cells / 2
+                    else:
+                        empty_cells_reward = empty_cells / 4
+                    if reward < 1.28:
+                        reward = reward * pow(1.15, (8 - empty_cells))
+                    value[father] += (reward + empty_cells_reward) *pow(0.8,deep)/ (4 - np.sum(valid_action))
                     self.mcts(next_state, value, deep + 1, father)
 
     def take_action(self, action):
