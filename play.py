@@ -1,17 +1,15 @@
-import threading
+
 from tkinter import Frame, Label, CENTER, Button
 import random
 from env2048 import logic
 from env2048 import constants as c
-import sys
+
 from ppo import PPO
 import time
-import torch
+
 import numpy as np
 import matplotlib
-
 matplotlib.use('Agg')
-import threading
 
 
 def log2(matrix):
@@ -23,7 +21,7 @@ def log2(matrix):
                 m[i][j] = np.log2(matrix[i][j])
     return m
 
-
+device="cuda:0"
 class GameGrid(Frame):
     def __init__(self, difficulty):
         self.f = Frame.__init__(self)
@@ -37,10 +35,14 @@ class GameGrid(Frame):
         self.matrix = logic.new_game(c.GRID_LEN, self.difficulty)
         self.test_epoch = 0
 
-    def enable_graph(self):
+    def enable_graph(self,type):
         self.grid()
         self.master.title('2048')
-        self.master.bind("<Key>", self.mcts_action)
+
+        if type=="reinforce":
+            self.master.bind("<KeyPress-H>", self.reinforce)
+        else:
+            self.master.bind("<KeyPress-H>", self.mcts_action)
         self.grid_cells = []
         self.init_grid()
         self.update_grid_cells()
@@ -92,7 +94,8 @@ class GameGrid(Frame):
                         fg=c.CELL_COLOR_DICT[new_number]
                     )
                     # 更新窗口
-        self.update_idletasks()
+        # self.update_idletasks()
+        self.update()
 
     def get_valid_action(self, state):
         valid_action = [0, 0, 0, 0]
@@ -118,9 +121,10 @@ class GameGrid(Frame):
             max_total_point = np.sum(self.matrix)
             self.count[int(np.log2(max_point))] += 1
             time.sleep(1)
-        print(show)
-        print(count)
         self.destroy_window()
+        print(self.show)
+        print(self.count)
+
 
     def mcts_action(self, event):
         for i in range(self.test_epoch):
@@ -133,12 +137,14 @@ class GameGrid(Frame):
                 action = np.argmax(value)
                 self.take_action(action)
             max_point = np.max(self.matrix)
-            max_total_point = np.sum(self.matrix)
+            print("第{}轮".format(i))
+            #max_total_point = np.sum(self.matrix)
             self.count[int(np.log2(max_point))] += 1
-            time.sleep(2)
+            time.sleep(1)
+        self.destroy_window()
         print(self.show)
         print(self.count)
-        self.destroy_window()
+
 
     def mcts(self, state, value, deep, father):
         if logic.game_state(state) == 'lose':
@@ -163,7 +169,7 @@ class GameGrid(Frame):
                                 reward = reward * pow(1.15, (8 - empty_cells))
                             value[action] = (reward + empty_cells_reward)
                             self.mcts(next_state, value, deep + 1, father)
-        if deep < 4 and deep != 0:
+        if deep <5 and deep != 0:
             for action in range(4):
                 if valid_action[action] == 0:
                     next_state, done, reward = self.commands[action](state)
@@ -190,15 +196,14 @@ class GameGrid(Frame):
             self.update_grid_cells()
 
     def test_search_tree(self):
-        self.enable_graph()
-        self.master.bind("<Key>", self.mcts_action)
+        self.enable_graph("mcts")
 
     def test_reinforce(self):
         self.agent = PPO(0, 0, 0, 0, 0, 0)
         self.agent.load_weight(327600)
         self.agent.eval()
-        self.enable_graph()
-        self.master.bind("<Key>", self.reinforce)
+        self.enable_graph("reinforce")
+
 
     def predict(self, test_case, test_epoch):
         self.test_epoch = test_epoch
@@ -210,10 +215,12 @@ class GameGrid(Frame):
 
 # 运行
 if __name__ == '__main__':
-    # 0,1,2 难度系数
-    difficult_factor = 1
+    # 0,1,2 难度系数 0每局新生成的数为只有2，1每局新生成的数包含2，4
+    difficult_factor = 0
     x = GameGrid(difficult_factor)
-    # test_case = "reinforce"
+    #mcts就是搜索树
+    # test_case = "reinforce" "mcts"
+
     test_case = "mcts"
-    train_epoch = 20
+    train_epoch = 100
     x.predict(test_case, train_epoch)
