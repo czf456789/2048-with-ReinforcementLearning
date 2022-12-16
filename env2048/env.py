@@ -10,8 +10,8 @@ import numpy as np
 # 封装的环境类
 class envs():
 
-    def __init__(self):
-        self.game = GameGrid()
+    def __init__(self,difficulty_factor):
+        self.game = GameGrid(difficulty_factor)
         #一局游戏的矩阵
         self.matrix = self.game.reset()
 

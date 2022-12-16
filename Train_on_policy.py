@@ -21,7 +21,7 @@ def train_on_policy(args):
     gamma = args.gama
     eps = 0.2
     agent = PPO(actor_lr, critic_lr, lmbda, epochs, eps, gamma)
-    env2048 = envs(args.diffcluty_factor)
+    env2048 = envs(args.difficulty_factor)
     return_list = []
     critic_loss_list = []
     agent.train()

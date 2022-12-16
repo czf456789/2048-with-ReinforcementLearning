@@ -20,12 +20,11 @@ def log2(matrix):
 class GameGrid():
     def __init__(self,difficulty_factor):
         #四种动作
-        self.commands = {
-            logic.up,
+        self.commands = [ logic.up,
             logic.down,
             logic.left,
-            logic.right,
-        }
+            logic.right]
+
         self.difficulty=difficulty_factor
 
 
@@ -39,23 +38,19 @@ class GameGrid():
         return True
 
     # 测试这个动作是否合法
-    def step_test(self, action, state):
-        if action in self.commands:
-            _, done, _ = self.commands[action](state)
-        return done
 
-    def get_valid_action(self, matrix):
-        actions = [c.KEY_UP, c.KEY_DOWN, c.KEY_LEFT, c.KEY_RIGHT]
+    def get_valid_action(self, state):
         valid_action = [0, 0, 0, 0]
-        if self.check_state(matrix):
-            for i in range(4):
-                if not self.step_test(actions[i], matrix):
-                    valid_action[i] += 1
-        #返回值若 valid_action[i]=1 说明动作i是无效动作
+        if logic.game_state(state) != 'lose':
+            for action in range(4):
+                _, done, _ = self.commands[action](state)
+                if not done:
+                    valid_action[action] += 1
         return valid_action
 
+
     def step_action(self, action, state):
-        InstantReward = 0
+
             # done为False意思为做出的动作是无效动作
         next_state, done, InstantReward = self.commands[action](state)
         if logic.game_state(next_state) == 'lose':
