@@ -24,7 +24,7 @@ if __name__ == '__main__':
     #一开始可以将折算因子降低到0.95 后续再慢慢升高到0.995
     parser.add_argument('--gama', default=0.96, type=float, help='折算因子 discount_factor')
     # 训练的总轮次
-    parser.add_argument('--epochs', default=650000, type=int, metavar='N',
+    parser.add_argument('--epochs', default=65000, type=int, metavar='N',
                         help='number of total epochs to run')
     # 学习率
     #actor学习率设为1e-5 可以尝试更低的

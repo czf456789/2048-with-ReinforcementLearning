@@ -42,9 +42,11 @@ def train_on_policy(args):
                 done = True
                 while done:
                     # 无效动作在step之前以及提前过滤掉了
+
                     valid_action = env2048.get_valid_action()
                     # 如果是从过滤非法操作中采样出来的，给与更高的奖励
                     action= agent.step(state, valid_action)
+
                     next_state, reward, done = env2048.step(action)
                     transition['state'].append(state)
                     transition['action'].append(action)

@@ -50,14 +50,15 @@ class GameGrid():
 
 
     def step_action(self, action, state):
-
             # done为False意思为做出的动作是无效动作
+
         next_state, done, InstantReward = self.commands[action](state)
+
         if logic.game_state(next_state) == 'lose':
                 factor = 10 - np.log2(np.array(next_state).max())
                 InstantReward = -20 * factor
                 # print("游戏失败")
-                return log2(next_state), InstantReward, False, done
+                return next_state, InstantReward, False, done
         #在随机位置添加一个数字
         next_state = logic.add_two(next_state,self.difficulty)
-        return log2(next_state), InstantReward, True, done
+        return next_state, InstantReward, True, done

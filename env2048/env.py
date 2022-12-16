@@ -6,7 +6,14 @@ from env2048.GameGrid import GameGrid
 import random
 import numpy as np
 
-
+def log2(matrix):
+    m = np.array(0)
+    m = np.resize(m, (len(matrix[0]), len(matrix[0])))
+    for i in range(len(matrix[0])):
+        for j in range(len(matrix[0])):
+            if matrix[i][j] != 0:
+                m[i][j] = np.log2(matrix[i][j])
+    return m
 # 封装的环境类
 class envs():
 
@@ -24,7 +31,7 @@ class envs():
 
     def step(self, action):
         self.matrix, reward, game_done, is_legal = self.game.step_action(action, self.matrix)
-        return self.matrix, reward, game_done
+        return log2(self.matrix), reward, game_done
 
     def check_state(self):
         return self.game.check_state(self.matrix)
@@ -32,4 +39,4 @@ class envs():
     # 重新生成棋盘
     def reset(self):
         self.matrix = self.game.reset()
-        return self.matrix
+        return log2(self.matrix)
